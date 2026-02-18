@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 深蓝到亮紫的明显渐变 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#1E1B4B"
+                android:endColor="#8B5CF6"
+                android:angle="270"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>
