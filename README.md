@@ -67,7 +67,7 @@
 
 ### 方式 1：下载 APK（推荐）
 
-1. 从 [Releases](https://github.com/Mark111112/bus_app/releases) 下载最新 APK
+1. 从 [Releases](https://github.com/Mark111112/BusApp/releases) 下载最新 APK
 2. 在 Android 设备上安装
 3. 打开应用即可使用
 
@@ -82,8 +82,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/Mark111112/bus_app.git
-cd bus_app
+git clone https://github.com/Mark111112/BusApp.git
+cd BusApp
 
 # 安装依赖
 flutter pub get
