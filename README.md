@@ -260,6 +260,13 @@ lib/
 - [ ] 多语言界面
 - [ ] 播放列表功能
 
+## 📋 更新日志
+
+### 2026-05-01
+- MissAV 播放器改进：支持 proxy/direct 双模式播放
+- 播放结果结构化（`MissAVPlaybackResult`），支持自定义 headers
+- 修复 MissAV 部分 HLS 流因 Referer 丢失无法播放的问题
+
 ## 🤝 贡献
 
 欢迎贡献代码、报告问题或提出建议！
