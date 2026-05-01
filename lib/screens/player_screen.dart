@@ -32,6 +32,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   String? _itemId;             // Jellyfin 项目ID
   String? _originalUrl;        // 原始播放 URL
   String? _transcodedUrl;      // 转码播放 URL
+  Map<String, String> _httpHeaders = const {}; // MissAV 等在线播放附加请求头
 
   // 115 转码相关
   String? _pickcode;           // 115 文件 pickcode
@@ -160,6 +161,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
         _pickcode = args['pickcode']?.toString();
         _fileId = args['fileId']?.toString();
         _downloadData = args['downloadData'] as Map<String, dynamic>?;
+        final rawHeaders = args['httpHeaders'];
+        if (rawHeaders is Map) {
+          _httpHeaders = rawHeaders.map((key, value) => MapEntry(key.toString(), value.toString()));
+        }
       }
 
       if (url != null && url.isNotEmpty) {
@@ -205,7 +210,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         _controller = VideoPlayerController.file(File(url));
       } else {
         print('[Player] 使用网络模式，创建 VideoPlayerController.networkUrl...');
-        _controller = VideoPlayerController.networkUrl(parsedUrl);
+        _controller = VideoPlayerController.networkUrl(parsedUrl, httpHeaders: _httpHeaders);
         print('[Player] VideoPlayerController 已创建');
       }
 

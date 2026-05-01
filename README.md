@@ -67,7 +67,7 @@
 
 ### 方式 1：下载 APK（推荐）
 
-1. 从 [Releases](https://github.com/Mark111112/BusApp/releases) 下载最新 APK
+1. 从 [Releases](https://github.com/Mark111112/bus_app/releases) 下载最新 APK
 2. 在 Android 设备上安装
 3. 打开应用即可使用
 
@@ -82,8 +82,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/Mark111112/BusApp.git
-cd BusApp
+git clone https://github.com/Mark111112/bus_app.git
+cd bus_app
 
 # 安装依赖
 flutter pub get
@@ -274,17 +274,6 @@ lib/
 
 本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
 
-## 💖 打赏
-
-如果你觉得这个项目对你有帮助，欢迎请我喝杯咖啡！☕
-
-**以太坊 (ETH)：**
-```
-0x5DEcf1e18968112ED4caD5C71315B45cC844b647
-```
-
-*您的支持是我持续开发的动力！* ❤️
-
 ## 🙏 致谢
 
 - [Flutter](https://flutter.dev/) - 跨平台 UI 框架
@@ -295,8 +284,8 @@ lib/
 
 ## 📮 联系方式
 
-- **问题反馈**：[GitHub Issues](https://github.com/Mark111112/BusApp/issues)
-- **功能建议**：[GitHub Discussions](https://github.com/Mark111112/BusApp/discussions)
+- **问题反馈**：[GitHub Issues](https://github.com/Mark111112/bus_app/issues)
+- **功能建议**：[GitHub Discussions](https://github.com/Mark111112/bus_app/discussions)
 
 ---
 

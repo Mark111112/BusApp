@@ -3,6 +3,37 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+class MissAVPlaybackResult {
+  final String? streamUrl;
+  final String? directUrl;
+  final String? proxyUrl;
+  final String? proxyPath;
+  final String mode;
+  final Map<String, String> headers;
+
+  const MissAVPlaybackResult({
+    required this.streamUrl,
+    required this.directUrl,
+    required this.proxyUrl,
+    required this.proxyPath,
+    required this.mode,
+    required this.headers,
+  });
+
+  bool get hasPlayableUrl => (streamUrl != null && streamUrl!.isNotEmpty) ||
+      (proxyUrl != null && proxyUrl!.isNotEmpty) ||
+      (proxyPath != null && proxyPath!.isNotEmpty) ||
+      (directUrl != null && directUrl!.isNotEmpty);
+
+  String? get preferredUrl {
+    if (proxyUrl != null && proxyUrl!.isNotEmpty) return proxyUrl;
+    if (proxyPath != null && proxyPath!.isNotEmpty) return proxyPath;
+    if (streamUrl != null && streamUrl!.isNotEmpty) return streamUrl;
+    if (directUrl != null && directUrl!.isNotEmpty) return directUrl;
+    return null;
+  }
+}
+
 class MissAVService {
   String _baseUrl;
   late final Dio _dio;
@@ -43,23 +74,32 @@ class MissAVService {
   }
 
   /// 优先通过 Python 服务器获取
-  Future<String?> getStreamUrl(String movieId, {String? quality}) async {
+  Future<MissAVPlaybackResult?> getStreamUrl(String movieId, {String? quality}) async {
     // 如果配置了 Python 服务器，优先使用
     if (_pythonServerUrl != null && _pythonServerUrl!.isNotEmpty) {
       if (kDebugMode) print('[MissAV] Using Python server: $_pythonServerUrl');
-      final url = await _fetchFromPythonServer(movieId);
-      if (url != null) {
-        return url;
+      final result = await _fetchFromPythonServer(movieId);
+      if (result != null) {
+        return result;
       }
       if (kDebugMode) print('[MissAV] Python server failed, falling back to direct request');
     }
 
     // 回退到直接请求
-    return _fetchDirect(movieId, quality);
+    final directUrl = await _fetchDirect(movieId, quality);
+    if (directUrl == null || directUrl.isEmpty) return null;
+    return MissAVPlaybackResult(
+      streamUrl: directUrl,
+      directUrl: directUrl,
+      proxyUrl: null,
+      proxyPath: null,
+      mode: "direct",
+      headers: const {},
+    );
   }
 
   /// 从 MissAV Stream 服务获取播放 URL
-  Future<String?> _fetchFromPythonServer(String movieId) async {
+  Future<MissAVPlaybackResult?> _fetchFromPythonServer(String movieId) async {
     try {
       final url = '$_pythonServerUrl/api/resolve/$movieId';
       if (kDebugMode) print('[MissAV] Fetching from stream service: $url');
@@ -79,10 +119,53 @@ class MissAVService {
         final data = response.data as Map<String, dynamic>;
         final success = data['success'] as bool?;
         if (success == true) {
+          final playback = data['playback'];
+          if (playback is Map<String, dynamic>) {
+            final rawHeaders = playback['headers'];
+            final headers = <String, String>{};
+            if (rawHeaders is Map) {
+              rawHeaders.forEach((key, value) {
+                if (key != null && value != null) {
+                  headers[key.toString()] = value.toString();
+                }
+              });
+            }
+            String? streamUrl = playback['stream_url']?.toString() ?? data['stream_url']?.toString();
+            String? proxyUrl = playback['proxy_url']?.toString();
+            String? proxyPath = playback['proxy_path']?.toString();
+            final base = (_pythonServerUrl ?? '').trim();
+            if (base.isNotEmpty) {
+              if (proxyPath != null && proxyPath.isNotEmpty) {
+                proxyUrl = proxyPath.startsWith('http') ? proxyPath : '${base}${proxyPath.startsWith('/') ? '' : '/'}$proxyPath';
+              }
+              if (streamUrl != null && streamUrl.isNotEmpty && streamUrl.startsWith('/')) {
+                streamUrl = '${base}${streamUrl.startsWith('/') ? '' : '/'}$streamUrl';
+              }
+            }
+            final result = MissAVPlaybackResult(
+              streamUrl: streamUrl,
+              directUrl: playback['direct_url']?.toString(),
+              proxyUrl: proxyUrl,
+              proxyPath: proxyPath,
+              mode: playback['mode']?.toString() ?? 'direct',
+              headers: headers,
+            );
+            if (result.hasPlayableUrl) {
+              if (kDebugMode) print('[MissAV] Got playback payload from stream service: mode=${result.mode}, url=${result.preferredUrl}');
+              return result;
+            }
+          }
           final streamUrl = data['stream_url'] as String?;
           if (streamUrl != null && streamUrl.isNotEmpty) {
-            if (kDebugMode) print('[MissAV] Got stream URL from stream service: $streamUrl');
-            return streamUrl;
+            if (kDebugMode) print('[MissAV] Got legacy stream URL from stream service: $streamUrl');
+            return MissAVPlaybackResult(
+              streamUrl: streamUrl,
+              directUrl: streamUrl,
+              proxyUrl: null,
+              proxyPath: null,
+              mode: 'legacy',
+              headers: const {},
+            );
           }
         }
       } else if (response.statusCode == 404) {

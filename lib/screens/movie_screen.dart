@@ -352,10 +352,10 @@ class _MovieScreenState extends State<MovieScreen> {
           );
         }
 
-        final streamUrl = await missAVService.getStreamUrl(_currentMovieId!);
+        final playback = await missAVService.getStreamUrl(_currentMovieId!);
 
-        if (streamUrl != null && mounted) {
-          _startPlayback(streamUrl);
+        if (playback != null && playback.hasPlayableUrl && mounted) {
+          _startPlayback(playback);
           return;
         }
       }
@@ -380,7 +380,13 @@ class _MovieScreenState extends State<MovieScreen> {
       );
 
       if (streamUrl != null && mounted) {
-        _startPlayback(streamUrl);
+        _startPlayback(MissAVPlaybackResult(
+          streamUrl: streamUrl,
+          directUrl: streamUrl,
+          proxyUrl: null,
+          mode: "webview",
+          headers: const {},
+        ));
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -408,16 +414,20 @@ class _MovieScreenState extends State<MovieScreen> {
   }
 
   /// 开始播放
-  void _startPlayback(String streamUrl) {
+  void _startPlayback(MissAVPlaybackResult playback) {
     if (!mounted) return;
 
     Navigator.pushNamed(
       context,
       '/player',
       arguments: {
-        'url': streamUrl,
+        'url': playback.preferredUrl,
         'title': '在线播放: $_currentMovieId',
         'isLocal': false,
+        'httpHeaders': playback.headers,
+        'playbackMode': playback.mode,
+        'directUrl': playback.directUrl,
+        'proxyUrl': playback.proxyUrl,
       },
     );
   }
