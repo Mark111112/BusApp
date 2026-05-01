@@ -384,6 +384,7 @@ class _MovieScreenState extends State<MovieScreen> {
           streamUrl: streamUrl,
           directUrl: streamUrl,
           proxyUrl: null,
+          proxyPath: null,
           mode: "webview",
           headers: const {},
         ));
