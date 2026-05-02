@@ -127,11 +127,61 @@ flutter build appbundle --release
 
 ### MissAV Stream 服务（可选）
 
-用于在线播放 MissAV 视频：
+用于在线播放 MissAV 视频。这个服务**不是 Flutter 依赖库**，而是一个单独部署的后端解析服务。
 
-1. 配置后端服务地址（例如：`http://192.168.1.246:9090`）
-2. 应用会自动调用 API 解析视频流
-3. 支持外部网络访问（需配置反向代理）
+#### 服务来源
+
+默认配套项目：
+
+- upstream：`https://github.com/Mark111112/missav-stream`
+- 示例 fork：`https://github.com/furey1116/missav-stream`
+
+如果你只拿到了 `bus_app`，但没有这个后端服务，**MissAV 在线播放功能将不可用**，应用会退回到 WebView / 直连等兼容路径，成功率取决于站点当前策略。
+
+#### 作用
+
+应用会调用这个后端服务：
+
+1. 解析影片页面
+2. 提取可播放的 HLS / m3u8 地址
+3. 返回给 App 一个结构化播放结果（包含 `stream_url`、`playback.headers` 等）
+
+当前推荐返回格式示例：
+
+```json
+{
+  "success": true,
+  "movie_id": "YST-352",
+  "stream_url": "https://surrit.com/.../720p/video.m3u8",
+  "playback": {
+    "mode": "headers",
+    "stream_url": "https://surrit.com/.../720p/video.m3u8",
+    "direct_url": "https://surrit.com/.../720p/video.m3u8",
+    "proxy_url": null,
+    "proxy_path": null,
+    "headers": {
+      "Referer": "https://missav.ai/YST-352",
+      "Origin": "https://missav.ai",
+      "User-Agent": "Mozilla/5.0 ..."
+    }
+  }
+}
+```
+
+#### 部署与配置
+
+1. 先部署 `missav-stream` 服务（Docker / gunicorn / Koyeb / 自建 VPS 均可）
+2. 在 App 设置中填入后端服务地址，例如：
+   - `http://192.168.1.246:9090`
+   - `https://your-domain.example.com`
+3. 应用会自动调用 `/api/resolve/<movie_id>` 解析视频流
+
+#### 重要说明
+
+- **推荐模式：后端只做解析，不做视频流量代理。**
+- 如果把 HLS/TS 视频流也代理到轻量平台（例如免费 PaaS），很容易因为带宽/流量限制出问题。
+- 当前 App 更适合让后端返回 `headers`，由手机端直接拉取视频流。
+- 若需要外网访问，请自行配置 HTTPS 与反向代理。
 
 ### Jellyfin 配置
 
