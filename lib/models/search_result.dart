@@ -6,6 +6,7 @@ class SearchResultItem {
   final String? date;
   final String? type; // 'movie' 或 'actor'
   final bool? hasMagnets; // 是否有磁力链接（null=未知，需要获取详情）
+  final bool isFc2; // 是否来自 FC2 数据源
 
   SearchResultItem({
     required this.id,
@@ -14,6 +15,7 @@ class SearchResultItem {
     this.date,
     this.type,
     this.hasMagnets,
+    this.isFc2 = false,
   });
 
   factory SearchResultItem.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,7 @@ class SearchResultItem {
       date: json['date'] as String?,
       type: json['type'] as String?,
       hasMagnets: json['hasMagnets'] as bool?,
+      isFc2: json['isFc2'] as bool? ?? false,
     );
   }
 
@@ -35,6 +38,7 @@ class SearchResultItem {
       'date': date,
       'type': type,
       'hasMagnets': hasMagnets,
+      'isFc2': isFc2,
     };
   }
 
@@ -49,6 +53,7 @@ class SearchResultItem {
     String? date,
     String? type,
     bool? hasMagnets,
+    bool? isFc2,
   }) {
     return SearchResultItem(
       id: id ?? this.id,
@@ -57,6 +62,7 @@ class SearchResultItem {
       date: date ?? this.date,
       type: type ?? this.type,
       hasMagnets: hasMagnets ?? this.hasMagnets,
+      isFc2: isFc2 ?? this.isFc2,
     );
   }
 }

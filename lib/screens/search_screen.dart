@@ -320,6 +320,7 @@ class _SearchScreenState extends State<SearchScreen> {
           videoId: item.id,
           date: item.date,
           style: MovieCardStyle.search,
+          isFc2: item.isFc2,
           topRightIcon: buildMagnetIcon(),
           onTap: () {
             Navigator.pushNamed(

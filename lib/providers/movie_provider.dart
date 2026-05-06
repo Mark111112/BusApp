@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../../models/models.dart';
 import '../../services/services.dart';
+import '../../services/fc2_service.dart';
 import '../repositories/repositories.dart';
 
 /// 影片状态
@@ -12,14 +13,17 @@ class MovieProvider extends ChangeNotifier {
   final MovieRepository _repository;
   final ScraperService _scraperService;
   final JavBusService _javBusService;
+  final FC2Service _fc2Service;
 
   MovieProvider({
     MovieRepository? repository,
     ScraperService? scraperService,
     JavBusService? javBusService,
+    FC2Service? fc2Service,
   })  : _repository = repository ?? MovieRepository(),
         _scraperService = scraperService ?? ScraperService(),
-        _javBusService = javBusService ?? JavBusService();
+        _javBusService = javBusService ?? JavBusService(),
+        _fc2Service = fc2Service ?? FC2Service();
 
   MovieStatus _status = MovieStatus.initial;
   Movie? _movie;
@@ -48,21 +52,35 @@ class MovieProvider extends ChangeNotifier {
       if (movie == null || forceRefresh) {
         if (kDebugMode) print('[MovieProvider] 从网络获取影片: $videoId (forceRefresh=$forceRefresh)');
 
-        // 优先尝试 JavBus（有封面、演员、样本图片、磁力链接）
-        try {
-          final javbusMovie = await _javBusService.getMovieDetail(videoId);
-          if (javbusMovie != null) {
-            movie = javbusMovie;
-            if (kDebugMode) print('[MovieProvider] JavBus 获取成功');
-            // 保存 JavBus 数据（没有简介也保存）
-            await _repository.saveMovie(movie);
+        // 优先尝试 FC2（如果是 FC2 ID）
+        if (_fc2Service.isFc2Query(videoId)) {
+          try {
+            final fc2Movie = await _fc2Service.getMovieInfo(videoId);
+            if (fc2Movie != null) {
+              movie = fc2Movie;
+              if (kDebugMode) print('[MovieProvider] FC2 获取成功');
+              await _repository.saveMovie(movie);
+            }
+          } catch (e) {
+            if (kDebugMode) print('[MovieProvider] FC2 获取失败: $e');
           }
-        } catch (e) {
-          if (kDebugMode) print('[MovieProvider] JavBus 获取失败: $e，尝试 ScraperService');
-          // JavBus 完全失败，使用 ScraperService 作为备选
-          movie = await _scraperService.scrape(videoId);
-          if (movie != null) {
-            await _repository.saveMovie(movie);
+        }
+
+        // 如果 FC2 没拿到结果，尝试 JavBus
+        if (movie == null) {
+          try {
+            final javbusMovie = await _javBusService.getMovieDetail(videoId);
+            if (javbusMovie != null) {
+              movie = javbusMovie;
+              if (kDebugMode) print('[MovieProvider] JavBus 获取成功');
+              await _repository.saveMovie(movie);
+            }
+          } catch (e) {
+            if (kDebugMode) print('[MovieProvider] JavBus 获取失败: $e，尝试 ScraperService');
+            movie = await _scraperService.scrape(videoId);
+            if (movie != null) {
+              await _repository.saveMovie(movie);
+            }
           }
         }
       } else {

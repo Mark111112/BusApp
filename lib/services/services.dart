@@ -11,3 +11,4 @@ export 'translator_service.dart';
 export 'jellyfin_service.dart';
 export 'video_player_service.dart';
 export 'dmm_service.dart';
+export 'fc2_service.dart';

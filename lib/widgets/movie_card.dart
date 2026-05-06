@@ -51,6 +51,9 @@ class MovieCard extends StatelessWidget {
   /// 库来源标签颜色
   final Color? libraryLabelColor;
 
+  /// 是否为 FC2 内容
+  final bool isFc2;
+
   /// 点击事件
   final VoidCallback? onTap;
 
@@ -73,6 +76,7 @@ class MovieCard extends StatelessWidget {
     this.customSuffixIcon,
     this.libraryLabel,
     this.libraryLabelColor,
+    this.isFc2 = false,
     this.onTap,
     this.onLongPress,
     this.showPlayButton = true,
@@ -155,20 +159,41 @@ class MovieCard extends StatelessWidget {
           return Positioned(
             top: 8,
             left: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.green[600],
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                videoId!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isFc2 ? Colors.orange[700] : Colors.green[600],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isFc2) ...[
+                        const Text(
+                          'FC2',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(
+                        videoId!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           );
         }

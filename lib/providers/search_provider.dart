@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../models/search_result.dart';
 import '../services/services.dart';
+import '../services/fc2_service.dart';
 
 /// 搜索状态
 enum SearchStatus { initial, searching, results, error, loadingMore }
@@ -10,12 +11,15 @@ enum SearchStatus { initial, searching, results, error, loadingMore }
 class SearchProvider extends ChangeNotifier {
   final ScraperService _scraperService;
   final JavBusService _javBusService;
+  final FC2Service _fc2Service;
 
   SearchProvider({
     ScraperService? scraperService,
     JavBusService? javBusService,
+    FC2Service? fc2Service,
   })  : _scraperService = scraperService ?? ScraperService(),
-        _javBusService = javBusService ?? JavBusService();
+        _javBusService = javBusService ?? JavBusService(),
+        _fc2Service = fc2Service ?? FC2Service();
 
   SearchStatus _status = SearchStatus.initial;
   List<SearchResultItem> _results = [];
@@ -114,14 +118,23 @@ class SearchProvider extends ChangeNotifier {
           page: 1,
           uncensored: _isUncensored,
         );
+      } else if (_fc2Service.isFc2SearchKeyword(query)) {
+        // FC2 搜索路由
+        if (kDebugMode) print('FC2 搜索: $query');
+        pagedResult = await _fc2Service.searchKeyword(query, page: 1);
       } else {
-        // 关键词搜索
+        // JavBus 关键词搜索
         if (kDebugMode) print('开始 JavBus 搜索...');
         pagedResult = await _javBusService.search(
           query,
           page: 1,
           uncensored: _isUncensored,
         );
+        // JavBus 无结果时回退到 FC2
+        if (!pagedResult.hasResults && _fc2Service.isFc2SearchKeyword(query)) {
+          if (kDebugMode) print('JavBus 无结果，回退 FC2 搜索');
+          pagedResult = await _fc2Service.searchKeyword(query, page: 1);
+        }
       }
 
       if (kDebugMode) print('完成, 结果数: ${pagedResult.itemCount}');
@@ -162,8 +175,11 @@ class SearchProvider extends ChangeNotifier {
           page: nextPage,
           uncensored: _isUncensored,
         );
+      } else if (_fc2Service.isFc2SearchKeyword(_currentQuery ?? '')) {
+        // FC2 加载更多
+        pagedResult = await _fc2Service.searchKeyword(_currentQuery!, page: nextPage);
       } else {
-        // 加载更多搜索结果
+        // JavBus 加载更多
         pagedResult = await _javBusService.search(
           _currentQuery!,
           page: nextPage,
